@@ -24,7 +24,11 @@ class _SplashView extends StatelessWidget {
     return BlocListener<SplashBloc, SplashState>(
       listener: (context, state) {
         if (state is SplashFinished) {
-          context.go('/onboarding');
+          if (state.isLoggedIn) {
+            context.go('/home');
+          } else {
+            context.go(state.showOnboarding ? '/onboarding' : '/login');
+          }
         }
       },
       child: const Scaffold(
@@ -70,7 +74,7 @@ class _SplashBodyState extends State<_SplashBody>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 3000),
     );
 
     _crossFade = CurvedAnimation(

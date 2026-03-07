@@ -1,8 +1,12 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
 
-import '../features/splash/view/splash_page.dart';
+import '../features/auth/view/doctor_signup_page.dart';
+import '../features/auth/view/login_page.dart';
+import '../features/auth/view/role_selection_page.dart';
+import '../features/auth/view/signup_page.dart';
 import '../features/onboarding/view/onboarding_page.dart';
+import '../features/patient/home/view/patient_home_page.dart';
+import '../features/splash/view/splash_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -16,10 +20,24 @@ final appRouter = GoRouter(
       builder: (context, state) => const OnboardingPage(),
     ),
     GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const RoleSelectionPage(),
+    ),
+    GoRoute(
+      path: '/signup/patient',
+      builder: (context, state) => const SignupPage(),
+    ),
+    GoRoute(
+      path: '/signup/doctor',
+      builder: (context, state) => const DoctorSignupPage(),
+    ),
+    GoRoute(
       path: '/home',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Home — coming soon')),
-      ),
+      builder: (context, state) => const PatientHomePage(),
     ),
   ],
 );

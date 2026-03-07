@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../bloc/onboarding_bloc.dart';
 
@@ -62,6 +63,12 @@ class _OnboardingViewState extends State<_OnboardingView> {
     super.dispose();
   }
 
+  Future<void> _markSeenAndGo(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_seen', true);
+    if (context.mounted) context.go('/login');
+  }
+
   void _next(BuildContext context, int currentPage) {
     if (currentPage < _pages.length - 1) {
       _pageController.nextPage(
@@ -69,7 +76,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/home');
+      _markSeenAndGo(context);
     }
   }
 
@@ -90,7 +97,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
         final isLast = page == _pages.length - 1;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFCFF5F2),
+          backgroundColor: const Color(0xFFCAF9FF),
           body: SafeArea(
             child: Column(
               children: [
@@ -110,7 +117,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
                           child: const Icon(
                             Icons.arrow_back_ios,
                             size: 20,
-                            color: Color(0xFF1ABFB0),
+                            color: Color(0xFFcaf9ff),
                           ),
                         )
                       else
@@ -119,7 +126,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
                       // Skip
                       if (!isLast)
                         GestureDetector(
-                          onTap: () => context.go('/home'),
+                          onTap: () => _markSeenAndGo(context),
                           child: const Text(
                             'Skip',
                             style: TextStyle(
@@ -143,7 +150,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
                     itemBuilder: (context, i) {
                       return Image.asset(
                         _pages[i].image,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.scaleDown,
                       );
                     },
                   ),
@@ -171,7 +178,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 50),
 
                       // Title
                       RichText(

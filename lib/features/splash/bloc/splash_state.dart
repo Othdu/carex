@@ -12,5 +12,11 @@ class SplashInitial extends SplashState {
 }
 
 class SplashFinished extends SplashState {
-  const SplashFinished();
+  const SplashFinished({required this.showOnboarding, this.isLoggedIn = false});
+
+  final bool showOnboarding;
+  final bool isLoggedIn;
+
+  @override
+  List<Object> get props => [showOnboarding, isLoggedIn];
 }

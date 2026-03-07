@@ -1,0 +1,96 @@
+import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
+
+import '../../../../core/errors/app_error.dart';
+import '../repository/auth_repository.dart';
+
+part 'auth_event.dart';
+part 'auth_state.dart';
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  AuthBloc({required AuthRepository repository})
+      : _repository = repository,
+        super(const AuthInitial()) {
+    on<LoginSubmitted>(_onLoginSubmitted);
+    on<SignupSubmitted>(_onSignupSubmitted);
+    on<GoogleSignInRequested>(_onGoogleSignIn);
+    on<FacebookSignInRequested>(_onFacebookSignIn);
+    on<AppleSignInRequested>(_onAppleSignIn);
+  }
+
+  final AuthRepository _repository;
+
+  Future<void> _onLoginSubmitted(
+    LoginSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.signInWithEmail(event.email, event.password);
+      emit(const AuthSuccess());
+    } catch (e) {
+      emit(AuthFailure(message: toUserMessage(e)));
+    }
+  }
+
+  Future<void> _onSignupSubmitted(
+    SignupSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.signUpWithEmail(
+        event.name,
+        event.email,
+        event.password,
+        role: event.role,
+        phone: event.phone,
+        dateOfBirth: event.dateOfBirth,
+        gender: event.gender,
+        medicalConditions: event.medicalConditions,
+      );
+      emit(const AuthSuccess());
+    } catch (e) {
+      emit(AuthFailure(message: toUserMessage(e)));
+    }
+  }
+
+  Future<void> _onGoogleSignIn(
+    GoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.signInWithGoogle();
+      emit(const AuthSuccess());
+    } catch (e) {
+      emit(AuthFailure(message: toUserMessage(e)));
+    }
+  }
+
+  Future<void> _onFacebookSignIn(
+    FacebookSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.signInWithFacebook();
+      emit(const AuthSuccess());
+    } catch (e) {
+      emit(AuthFailure(message: toUserMessage(e)));
+    }
+  }
+
+  Future<void> _onAppleSignIn(
+    AppleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _repository.signInWithApple();
+      emit(const AuthSuccess());
+    } catch (e) {
+      emit(AuthFailure(message: toUserMessage(e)));
+    }
+  }
+}
