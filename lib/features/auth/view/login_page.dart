@@ -60,6 +60,7 @@ class _LoginViewState extends State<_LoginView> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: const Color(0xFF1ABFB0),
         body: SafeArea(
           child: Column(
@@ -239,9 +240,7 @@ Widget _buildFormCard(BuildContext context) {
         ),
         const Spacer(),
         GestureDetector(
-          onTap: () {
-            // TODO: navigate to forgot-password screen
-          },
+          onTap: () => context.go('/forgot-password'),
           child: const Text(
             'Forgot password?',
             style: TextStyle(

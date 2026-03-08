@@ -112,7 +112,20 @@ class UpcomingReminderCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        context.read<PatientHomeBloc>().add(
+                              PatientHomeDoseRemindLater(
+                                scheduleEntryId: next.entry.id,
+                                medicationName: next.medication.name,
+                              ),
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Reminder set for 15 minutes'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
                       icon: const Icon(Icons.alarm_add_outlined, size: 15),
                       label: const Text('Remind Later'),
                       style: OutlinedButton.styleFrom(

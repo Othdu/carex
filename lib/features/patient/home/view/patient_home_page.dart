@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/models/today_dose.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../features/medications/repository/adherence_repository.dart';
 import '../../../../features/medications/repository/medication_repository.dart';
 import '../../../../features/readings/repository/reading_repository.dart';
+import '../../../medications/view/create_alert_page.dart';
+import '../../../medications/view/medication_reminder_sheet.dart';
 import '../../../patient/repository/sos_repository.dart';
+import '../../my_meds/view/my_meds_tab.dart';
+import '../../profile/view/profile_page.dart';
+import '../../../reports/view/reports_tab.dart';
 import '../bloc/patient_home_bloc.dart';
 import '../bloc/patient_home_event.dart';
 import '../bloc/patient_home_state.dart';
-import '../../profile/view/profile_page.dart';
 import 'widgets/medication_schedule_card.dart';
 import 'widgets/upcoming_reminder_card.dart';
 import 'widgets/weekly_streak_card.dart';
@@ -42,6 +48,77 @@ class _HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<_HomeShell> {
   int _tab = 0;
+  final _myMedsKey = GlobalKey<MyMedsTabState>();
+
+  /// Stored when a notification fires before the bloc has finished loading.
+  String? _pendingNotifEntryId;
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.onNotificationTap = _onNotificationTap;
+    // Check if app was cold-started from a notification tap.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final id = NotificationService.instance.pendingEntryId;
+      if (id != null) {
+        NotificationService.instance.pendingEntryId = null;
+        _showOrStoreNotif(id);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Clear our callback so it doesn't fire after this widget is gone.
+    if (NotificationService.instance.onNotificationTap == _onNotificationTap) {
+      NotificationService.instance.onNotificationTap = null;
+    }
+    super.dispose();
+  }
+
+  void _onNotificationTap(String entryId) {
+    if (mounted) _showOrStoreNotif(entryId);
+  }
+
+  void _showOrStoreNotif(String entryId) {
+    final state = context.read<PatientHomeBloc>().state;
+    if (state.status == PatientHomeStatus.loaded) {
+      _showReminderSheet(entryId, state.todayDoses);
+    } else {
+      _pendingNotifEntryId = entryId;
+    }
+  }
+
+  void _showReminderSheet(String entryId, List<TodayDose> doses) {
+    final dose = doses
+        .where((d) => d.entry.id == entryId && d.isPending)
+        .cast<TodayDose?>()
+        .firstOrNull;
+    if (dose == null) return;
+    MedicationReminderSheet.show(
+      context,
+      dose: dose,
+      onTaken: () => context
+          .read<PatientHomeBloc>()
+          .add(const PatientHomeLoadRequested()),
+    );
+  }
+
+  void _openCreateAlert() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CreateAlertPage(
+          onCreated: () {
+            _myMedsKey.currentState?.load();
+            context
+                .read<PatientHomeBloc>()
+                .add(const PatientHomeLoadRequested());
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,30 +132,37 @@ class _HomeShellState extends State<_HomeShell> {
           ),
         );
       },
-      child: Scaffold(
+      child: BlocListener<PatientHomeBloc, PatientHomeState>(
+        listenWhen: (prev, curr) =>
+            curr.status == PatientHomeStatus.loaded &&
+            prev.status != PatientHomeStatus.loaded,
+        listener: (context, state) {
+          if (_pendingNotifEntryId != null) {
+            final id = _pendingNotifEntryId!;
+            _pendingNotifEntryId = null;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _showReminderSheet(id, state.todayDoses);
+            });
+          }
+        },
+        child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
         body: IndexedStack(
           index: _tab,
           children: [
             const _HomeTab(),
-            _PlaceholderTab(icon: Icons.medication_outlined, label: 'My Meds'),
-            _PlaceholderTab(icon: Icons.bar_chart_rounded, label: 'Reports'),
+            MyMedsTab(key: _myMedsKey),
+            const ReportsTab(),
             const ProfileTab(),
           ],
         ),
         bottomNavigationBar: _BottomNavBar(
           currentIndex: _tab,
           onTap: (i) => setState(() => _tab = i),
+          onAddAlert: _openCreateAlert,
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {}, // TODO: add medication
-          backgroundColor: AppColors.teal,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-        ),
-        floatingActionButtonLocation:
-            FloatingActionButtonLocation.centerDocked,
+      ),
       ),
     );
   }
@@ -385,7 +469,7 @@ class _EmptySchedule extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.medication_outlined, size: 44, color: Colors.grey[200]),
+            Image.asset('assets/images/homescreen/pill.png', width: 44, height: 44, color: Colors.grey[300]),
             const SizedBox(height: 8),
             Text(
               'No medications scheduled for today',
@@ -403,13 +487,12 @@ class _EmptySchedule extends StatelessWidget {
 class _BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
-  const _BottomNavBar({required this.currentIndex, required this.onTap});
+  final VoidCallback onAddAlert;
+  const _BottomNavBar({required this.currentIndex, required this.onTap, required this.onAddAlert});
 
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
       color: Colors.white,
       elevation: 12,
       padding: EdgeInsets.zero,
@@ -428,8 +511,7 @@ class _BottomNavBar extends StatelessWidget {
             active: currentIndex == 1,
             onTap: () => onTap(1),
           ),
-          // space for the FAB + its label
-          const _AddAlertSlot(),
+          _AddAlertButton(onTap: onAddAlert),
           _NavItem(
             assetPath: 'assets/images/bottomnv/chart.png',
             label: 'Reports',
@@ -448,17 +530,27 @@ class _BottomNavBar extends StatelessWidget {
   }
 }
 
-class _AddAlertSlot extends StatelessWidget {
-  const _AddAlertSlot();
+class _AddAlertButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddAlertButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 72,
+    return GestureDetector(
+      onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 20), // leave room for notched FAB
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: AppColors.teal,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 2),
           Text(
             'Add Alert',
             style: TextStyle(
@@ -520,34 +612,6 @@ class _NavItem extends StatelessWidget {
           ),
           const SizedBox(height: 4),
         ],
-      ),
-    );
-  }
-}
-
-// ── Placeholder tabs ──────────────────────────────────────────────────────────
-
-class _PlaceholderTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _PlaceholderTab({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            Text(
-              '$label — coming soon',
-              style: TextStyle(color: Colors.grey[400]),
-            ),
-          ],
-        ),
       ),
     );
   }

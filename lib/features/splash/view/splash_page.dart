@@ -32,6 +32,7 @@ class _SplashView extends StatelessWidget {
         }
       },
       child: const Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Color(0xFFF0FAFA),
         body: _SplashBody(),
       ),
@@ -164,14 +165,14 @@ class _SplashBodyState extends State<_SplashBody>
 
               // CareX logo slides up + fades in
               Positioned(
-                bottom: size.height * 0.04,
+                bottom: size.height * 0.07,
                 child: FadeTransition(
                   opacity: _logoFade,
                   child: SlideTransition(
                     position: _logoSlide,
                     child: Image.asset(
                       'assets/images/splash screen/Frame 1.png',
-                      width: size.width * 0.55,
+                      width: size.width * 0.8,
                       fit: BoxFit.contain,
                     ),
                   ),

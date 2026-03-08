@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'core/services/notification_service.dart';
-import 'core/models/adherence_log.dart';
 import 'features/medications/repository/adherence_repository.dart';
 
 void main() async {
@@ -22,21 +21,10 @@ void main() async {
   final adherenceRepo = AdherenceRepository();
   await adherenceRepo.init();
 
+  // Store the tapped entry ID so _HomeShellState can show the reminder sheet.
   await NotificationService.instance.init(
-    onTap: (scheduleEntryId) async {
-      // Guard: only log if the user still has a valid session.
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
-      try {
-        await adherenceRepo.logDose(
-          scheduleEntryId: scheduleEntryId,
-          scheduledAt: DateTime.now(),
-          status: AdherenceStatus.taken,
-          takenAt: DateTime.now(),
-        );
-      } catch (_) {
-        // Swallow silently — will be retried from offline queue on next sync.
-      }
+    onTap: (scheduleEntryId) {
+      NotificationService.instance.pendingEntryId = scheduleEntryId;
     },
   );
 

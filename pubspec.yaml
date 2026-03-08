@@ -43,6 +43,7 @@ dependencies:
   hive_flutter: ^1.1.0
   firebase_core: ^3.6.0
   firebase_messaging: ^15.1.4
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,7 @@ flutter:
     - "assets/images/login and signup/"
     - assets/icons/
     - assets/images/bottomnv/
+    - assets/images/homescreen/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

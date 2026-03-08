@@ -2,7 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class AuthRepository {
   Future<void> signInWithEmail(String email, String password);
-  Future<void> signUpWithEmail(
+
+  Future<AuthResponse> signUpWithEmail(
     String name,
     String email,
     String password, {
@@ -12,9 +13,12 @@ abstract class AuthRepository {
     String? gender,
     String? medicalConditions,
   });
+
   Future<void> signInWithGoogle();
   Future<void> signInWithFacebook();
   Future<void> signInWithApple();
+  Future<void> resetPasswordForEmail(String email);
+  Future<void> updatePassword(String newPassword);
   Future<void> signOut();
 }
 
@@ -23,11 +27,14 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithEmail(String email, String password) async {
-    await _client.auth.signInWithPassword(email: email, password: password);
+    await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
   }
 
   @override
-  Future<void> signUpWithEmail(
+  Future<AuthResponse> signUpWithEmail(
     String name,
     String email,
     String password, {
@@ -37,24 +44,29 @@ class SupabaseAuthRepository implements AuthRepository {
     String? gender,
     String? medicalConditions,
   }) async {
-    final response = await _client.auth.signUp(
-      email: email,
-      password: password,
-      emailRedirectTo: 'carex://confirm',
-      data: {
-        'full_name': name,
-        'role': role,
-        if (phone != null) 'phone': phone,
-        if (dateOfBirth != null) 'date_of_birth': dateOfBirth,
-        if (gender != null) 'gender': gender,
-        if (medicalConditions != null) 'medical_conditions': medicalConditions,
-      },
-    );
-    // When email confirmation is enabled Supabase returns session == null.
-    // Sign in immediately so a persisted session exists for future app launches.
-    if (response.session == null) {
-      await _client.auth.signInWithPassword(email: email, password: password);
-    }
+    print('SIGNUP STARTED');
+
+    final response = await _client.auth
+        .signUp(
+          email: email,
+          password: password,
+          data: {
+            'full_name': name,
+            'role': role,
+            if (phone != null) 'phone': phone,
+            if (dateOfBirth != null) 'date_of_birth': dateOfBirth,
+            if (gender != null) 'gender': gender,
+            if (medicalConditions != null)
+              'medical_conditions': medicalConditions,
+          },
+        )
+        .timeout(const Duration(seconds: 20));
+
+    print('SIGNUP FINISHED');
+    print('USER: ${response.user?.id}');
+    print('SESSION: ${response.session != null}');
+
+    return response;
   }
 
   @override
@@ -70,6 +82,19 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> signInWithApple() async {
     await _client.auth.signInWithOAuth(OAuthProvider.apple);
+  }
+
+  @override
+  Future<void> resetPasswordForEmail(String email) async {
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'carex://reset-password',
+    );
+  }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
   @override

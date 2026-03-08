@@ -20,6 +20,9 @@ class NotificationService {
   /// Receives the scheduleEntryId encoded in the payload.
   void Function(String scheduleEntryId)? onNotificationTap;
 
+  /// Stores the most recent tapped scheduleEntryId until a handler picks it up.
+  String? pendingEntryId;
+
   Future<void> init({void Function(String scheduleEntryId)? onTap}) async {
     onNotificationTap = onTap;
     tz.initializeTimeZones();
@@ -97,7 +100,7 @@ class NotificationService {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // repeat daily
@@ -107,6 +110,48 @@ class NotificationService {
 
   Future<void> cancelForEntry(String scheduleEntryId) async {
     await _plugin.cancel(_idFromEntryId(scheduleEntryId));
+  }
+
+  /// Schedules a one-off notification exactly 1 hour from now.
+  Future<void> remindInOneHour({
+    required ScheduleEntry entry,
+    required String medicationName,
+  }) =>
+      scheduleRemindLater(
+        scheduleEntryId: entry.id,
+        medicationName: medicationName,
+        delay: const Duration(hours: 1),
+      );
+
+  /// Schedules a one-time "remind later" notification [delay] from now.
+  Future<void> scheduleRemindLater({
+    required String scheduleEntryId,
+    required String medicationName,
+    Duration delay = const Duration(minutes: 15),
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduled = now.add(delay);
+    final notifId = _idFromEntryId('rl_$scheduleEntryId');
+
+    await _plugin.zonedSchedule(
+      notifId,
+      "Don't forget: $medicationName",
+      'Tap to mark as taken',
+      scheduled,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: scheduleEntryId,
+    );
   }
 
   /// Converts a UUID to a stable int id for the notification system.

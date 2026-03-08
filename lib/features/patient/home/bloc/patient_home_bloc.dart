@@ -33,6 +33,7 @@ class PatientHomeBloc extends Bloc<PatientHomeEvent, PatientHomeState> {
     on<PatientHomeLoadRequested>(_onLoad);
     on<PatientHomeDoseTaken>(_onDoseTaken);
     on<PatientHomeDoseSkipped>(_onDoseSkipped);
+    on<PatientHomeDoseRemindLater>(_onDoseRemindLater);
     on<PatientHomeSOSSent>(_onSOSSent);
   }
 
@@ -111,6 +112,16 @@ class PatientHomeBloc extends Bloc<PatientHomeEvent, PatientHomeState> {
       status: AdherenceStatus.skipped,
     );
     add(const PatientHomeLoadRequested());
+  }
+
+  Future<void> _onDoseRemindLater(
+    PatientHomeDoseRemindLater event,
+    Emitter<PatientHomeState> emit,
+  ) async {
+    await NotificationService.instance.scheduleRemindLater(
+      scheduleEntryId: event.scheduleEntryId,
+      medicationName: event.medicationName,
+    );
   }
 
   Future<void> _onSOSSent(

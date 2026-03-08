@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/models/medication.dart';
@@ -25,6 +27,7 @@ class MedicationRepository {
     required String name,
     required String dose,
     String? instructions,
+    String? imageUrl,
   }) async {
     final row = await _client
         .from('medications')
@@ -33,6 +36,7 @@ class MedicationRepository {
           'name': name,
           'dose': dose,
           if (instructions != null) 'instructions': instructions,
+          if (imageUrl != null) 'image_url': imageUrl,
         })
         .select()
         .single();
@@ -46,11 +50,24 @@ class MedicationRepository {
           'name': med.name,
           'dose': med.dose,
           'instructions': med.instructions,
+          'image_url': med.imageUrl,
         })
         .eq('id', med.id)
         .select()
         .single();
     return Medication.fromJson(row);
+  }
+
+  /// Uploads [image] to Supabase Storage and returns the public URL.
+  /// Bucket: `medication-images` (create it in your Supabase dashboard,
+  /// set to public so URLs can be read without auth).
+  Future<String> uploadMedicationImage(File image, String medicationId) async {
+    final ext = image.path.split('.').last.toLowerCase();
+    final path = '$_uid/$medicationId.$ext';
+    await _client.storage
+        .from('medication-images')
+        .upload(path, image, fileOptions: const FileOptions(upsert: true));
+    return _client.storage.from('medication-images').getPublicUrl(path);
   }
 
   Future<void> deleteMedication(String medicationId) async {

@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/view/doctor_signup_page.dart';
+import '../features/auth/view/forgot_password_page.dart';
 import '../features/auth/view/login_page.dart';
+import '../features/auth/view/reset_password_page.dart';
 import '../features/auth/view/role_selection_page.dart';
 import '../features/auth/view/signup_page.dart';
 import '../features/onboarding/view/onboarding_page.dart';
@@ -22,6 +24,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordPage(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordPage(),
     ),
     GoRoute(
       path: '/signup',

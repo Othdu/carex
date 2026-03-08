@@ -1,4 +1,4 @@
-enum ReadingType { bp, sugar, pulse }
+enum ReadingType { bp, sugar, pulse, weight }
 
 extension ReadingTypeX on ReadingType {
   /// The string stored in the DB matches the original class diagram values.
@@ -6,12 +6,14 @@ extension ReadingTypeX on ReadingType {
         ReadingType.bp => 'BP',
         ReadingType.sugar => 'Sugar',
         ReadingType.pulse => 'Pulse',
+        ReadingType.weight => 'Weight',
       };
 
   static ReadingType from(String s) => switch (s) {
         'BP' => ReadingType.bp,
         'Sugar' => ReadingType.sugar,
         'Pulse' => ReadingType.pulse,
+        'Weight' => ReadingType.weight,
         _ => throw ArgumentError('Unknown reading type: $s'),
       };
 
@@ -19,6 +21,7 @@ extension ReadingTypeX on ReadingType {
         ReadingType.bp => 'mmHg',
         ReadingType.sugar => 'mg/dL',
         ReadingType.pulse => 'bpm',
+        ReadingType.weight => 'kg',
       };
 }
 

@@ -27,3 +27,20 @@ class AuthFailure extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthEmailConfirmationRequired extends AuthState {
+  const AuthEmailConfirmationRequired({required this.message});
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class AuthPasswordResetSent extends AuthState {
+  const AuthPasswordResetSent();
+}
+
+class AuthPasswordUpdated extends AuthState {
+  const AuthPasswordUpdated();
+}

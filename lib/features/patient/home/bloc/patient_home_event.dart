@@ -24,6 +24,15 @@ class PatientHomeDoseSkipped extends PatientHomeEvent {
   });
 }
 
+class PatientHomeDoseRemindLater extends PatientHomeEvent {
+  final String scheduleEntryId;
+  final String medicationName;
+  const PatientHomeDoseRemindLater({
+    required this.scheduleEntryId,
+    required this.medicationName,
+  });
+}
+
 class PatientHomeSOSSent extends PatientHomeEvent {
   const PatientHomeSOSSent();
 }

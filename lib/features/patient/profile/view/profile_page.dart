@@ -24,6 +24,7 @@ class ProfileTab extends StatelessWidget {
         .join();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.background,
       body: Column(
         children: [
@@ -392,6 +393,7 @@ class _SubPageScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -452,7 +454,10 @@ class _PersonalInfoPageState extends State<_PersonalInfoPage> {
     _phoneCtrl = TextEditingController(text: meta['phone'] as String? ?? '');
     _dobCtrl =
         TextEditingController(text: meta['date_of_birth'] as String? ?? '');
-    _gender = meta['gender'] as String?;
+    final rawGender = meta['gender'] as String?;
+    _gender = rawGender != null && rawGender.isNotEmpty
+        ? rawGender[0].toUpperCase() + rawGender.substring(1)
+        : null;
   }
 
   @override
@@ -461,6 +466,25 @@ class _PersonalInfoPageState extends State<_PersonalInfoPage> {
     _phoneCtrl.dispose();
     _dobCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    DateTime initial = DateTime.now();
+    if (_dobCtrl.text.isNotEmpty) {
+      try {
+        initial = DateTime.parse(_dobCtrl.text.trim());
+      } catch (_) {}
+    }
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      _dobCtrl.text =
+          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    }
   }
 
   Future<void> _save() async {
@@ -534,11 +558,16 @@ class _PersonalInfoPageState extends State<_PersonalInfoPage> {
                       keyboardType: TextInputType.phone,
                     ),
                     _Divider(),
-                    _FormField(
-                      label: 'Date of Birth',
-                      controller: _dobCtrl,
-                      icon: Icons.cake_outlined,
-                      hint: 'YYYY-MM-DD',
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: AbsorbPointer(
+                        child: _FormField(
+                          label: 'Date of Birth',
+                          controller: _dobCtrl,
+                          icon: Icons.cake_outlined,
+                          hint: 'YYYY-MM-DD',
+                        ),
+                      ),
                     ),
                     _Divider(),
                     _GenderSelector(

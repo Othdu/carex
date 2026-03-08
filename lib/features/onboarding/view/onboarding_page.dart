@@ -97,6 +97,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
         final isLast = page == _pages.length - 1;
 
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor: const Color(0xFFCAF9FF),
           body: SafeArea(
             child: Column(

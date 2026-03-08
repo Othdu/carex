@@ -53,3 +53,21 @@ class FacebookSignInRequested extends AuthEvent {
 class AppleSignInRequested extends AuthEvent {
   const AppleSignInRequested();
 }
+
+class ForgotPasswordSubmitted extends AuthEvent {
+  const ForgotPasswordSubmitted({required this.email});
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}
+
+class ResetPasswordSubmitted extends AuthEvent {
+  const ResetPasswordSubmitted({required this.newPassword});
+
+  final String newPassword;
+
+  @override
+  List<Object?> get props => [newPassword];
+}

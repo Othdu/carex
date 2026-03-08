@@ -84,11 +84,13 @@ class ReadingSummaryCard extends StatelessWidget {
         ReadingType.bp => 'Blood Pressure',
         ReadingType.sugar => 'Blood Sugar',
         ReadingType.pulse => 'Pulse',
+        ReadingType.weight => 'Weight',
       };
 
   IconData get _icon => switch (type) {
         ReadingType.bp => Icons.favorite_border,
         ReadingType.sugar => Icons.water_drop_outlined,
         ReadingType.pulse => Icons.monitor_heart_outlined,
+        ReadingType.weight => Icons.scale_outlined,
       };
 }

@@ -6,6 +6,7 @@ import '../bloc/auth_bloc.dart';
 import '../repository/auth_repository.dart';
 import 'auth_widgets.dart';
 
+
 class SignupPage extends StatelessWidget {
   const SignupPage({super.key});
 
@@ -67,21 +68,34 @@ class _PatientSignupViewState extends State<_PatientSignupView> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthSuccess) {
-          context.go('/home');
-        } else if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-        }
-      },
+  print('UI STATE: $state');
+
+  if (state is AuthSuccess) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Signup successful')),
+    );
+    context.go('/home');
+  } else if (state is AuthEmailConfirmationRequired) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(state.message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    context.go('/login');
+  } else if (state is AuthFailure) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(state.message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+},
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: _teal,
         body: SafeArea(
           child: Column(
@@ -281,6 +295,25 @@ class _PatientSignupViewState extends State<_PatientSignupView> {
     );
   }
 
+  String? _validate() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final phone = _phoneController.text.trim();
+    final dob = _dobController.text;
+
+    if (name.isEmpty) return 'Please enter your full name';
+    if (email.isEmpty) return 'Please enter your email address';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      return 'Please enter a valid email address';
+    }
+    if (password.isEmpty) return 'Please enter a password';
+    if (password.length < 6) return 'Password must be at least 6 characters';
+    if (phone.isEmpty) return 'Please enter your phone number';
+    if (dob.isEmpty) return 'Please select your date of birth';
+    return null;
+  }
+
   Widget _buildSubmitButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -289,6 +322,17 @@ class _PatientSignupViewState extends State<_PatientSignupView> {
           onTap: isLoading
               ? null
               : () {
+                  final error = _validate();
+                  if (error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
                   context.read<AuthBloc>().add(
                         SignupSubmitted(
                           name: _nameController.text.trim(),
@@ -296,9 +340,7 @@ class _PatientSignupViewState extends State<_PatientSignupView> {
                           password: _passwordController.text,
                           phone: _phoneController.text.trim(),
                           role: 'patient',
-                          dateOfBirth: _dobController.text.isEmpty
-                              ? null
-                              : _dobController.text,
+                          dateOfBirth: _dobController.text,
                           gender: _gender,
                           medicalConditions:
                               _conditionsController.text.trim().isEmpty

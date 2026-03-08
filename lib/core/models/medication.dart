@@ -4,6 +4,7 @@ class Medication {
   final String name;
   final String dose;
   final String? instructions;
+  final String? imageUrl;
   final DateTime createdAt;
 
   const Medication({
@@ -12,6 +13,7 @@ class Medication {
     required this.name,
     required this.dose,
     this.instructions,
+    this.imageUrl,
     required this.createdAt,
   });
 
@@ -21,6 +23,7 @@ class Medication {
         name: json['name'] as String,
         dose: json['dose'] as String,
         instructions: json['instructions'] as String?,
+        imageUrl: json['image_url'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 
@@ -30,6 +33,7 @@ class Medication {
         'name': name,
         'dose': dose,
         if (instructions != null) 'instructions': instructions,
+        if (imageUrl != null) 'image_url': imageUrl,
         'created_at': createdAt.toIso8601String(),
       };
 
@@ -37,6 +41,7 @@ class Medication {
     String? name,
     String? dose,
     String? instructions,
+    String? imageUrl,
   }) =>
       Medication(
         id: id,
@@ -44,6 +49,7 @@ class Medication {
         name: name ?? this.name,
         dose: dose ?? this.dose,
         instructions: instructions ?? this.instructions,
+        imageUrl: imageUrl ?? this.imageUrl,
         createdAt: createdAt,
       );
 }

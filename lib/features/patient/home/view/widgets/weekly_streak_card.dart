@@ -30,8 +30,11 @@ class WeeklyStreakCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.add_rounded,
-                            size: 14, color: AppColors.teal),
+                        Image.asset(
+                          'assets/images/homescreen/Flash.png',
+                          width: 14,
+                          height: 14,
+                        ),
                         const SizedBox(width: 4),
                         const Text(
                           'Weekly Streak',
@@ -105,10 +108,12 @@ class WeeklyStreakCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.medication_rounded,
-                size: 80,
-                color: AppColors.teal.withValues(alpha: 0.15),
+              Image.asset(
+                'assets/images/homescreen/pill.png',
+                width: 80,
+                height: 80,
+                
+                colorBlendMode: BlendMode.modulate,
               ),
             ],
           ),
